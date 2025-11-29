@@ -4,7 +4,7 @@
 
 import crypto from 'node:crypto';
 import { EncryptionError } from '../errors';
-import type { EncryptionStrategy, EncryptionOptions } from '../types';
+import type { EncryptionStrategy } from '../types';
 
 /**
  * AES-256-GCM encryption strategy
@@ -49,9 +49,9 @@ export class AESEncryption implements EncryptionStrategy {
 
       const buffer = Buffer.from(encryptedData, 'hex');
 
-      const iv = buffer.slice(0, this.ivLength);
-      const authTag = buffer.slice(this.ivLength, this.ivLength + this.authTagLength);
-      const encrypted = buffer.slice(this.ivLength + this.authTagLength);
+      const iv = buffer.subarray(0, this.ivLength);
+      const authTag = buffer.subarray(this.ivLength, this.ivLength + this.authTagLength);
+      const encrypted = buffer.subarray(this.ivLength + this.authTagLength);
 
       const decipher = crypto.createDecipheriv(this.algorithm, keyBuffer, iv);
       decipher.setAuthTag(authTag);

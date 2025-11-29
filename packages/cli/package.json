@@ -1,6 +1,6 @@
 {
   "name": "@libertas/cli",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Command-line interface for libertas credentials management",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -18,12 +18,13 @@
     "bin"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node build.mjs",
     "dev": "tsc --watch",
     "test": "vitest run",
     "lint": "eslint src --ext .ts",
     "type-check": "tsc --noEmit",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "link": "pnpm link --global"
   },
   "keywords": [
     "cli",

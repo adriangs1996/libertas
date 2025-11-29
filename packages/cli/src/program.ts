@@ -4,6 +4,7 @@
 
 import { Command } from 'commander';
 import { CredentialsCLI } from './commands/credentials-cli';
+import { initCommand } from './commands/init-command';
 import { loadConfig } from './utils/config-loader';
 import { Formatter } from './utils/formatter';
 import type { CLIConfig } from './types';
@@ -30,6 +31,20 @@ export async function createProgram(options: ProgramOptions = {}): Promise<Comma
     .option('--env <environment>', 'Set environment')
     .option('--storage-path <path>', 'Set storage path')
     .option('--master-key <key>', 'Set master key');
+
+  // Init command (setup wizard)
+  program
+    .command('init')
+    .description('Initialize libertas and set up project-specific or global configuration')
+    .option('-g, --global', 'Set up global (user-wide) configuration instead of project-specific')
+    .action(async (cmdOptions) => {
+      try {
+        await initCommand(cmdOptions.global === true);
+      } catch (error) {
+        console.error(Formatter.error(error instanceof Error ? error.message : 'Unknown error'));
+        process.exit(1);
+      }
+    });
 
   // Get command
   program

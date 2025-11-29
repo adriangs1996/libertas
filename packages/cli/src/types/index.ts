@@ -3,6 +3,7 @@
  */
 
 export interface CLIConfig {
+  projectName?: string;
   masterKey?: string;
   storagePath?: string;
   environment?: string;

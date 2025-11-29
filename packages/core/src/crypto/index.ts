@@ -28,14 +28,14 @@ export class CryptoUtils {
    * Extract salt from derived key
    */
   static extractSalt(derivedKey: Buffer): Buffer {
-    return derivedKey.slice(0, 32);
+    return derivedKey.subarray(0, 32);
   }
 
   /**
    * Extract actual key from derived key
    */
   static extractKey(derivedKey: Buffer): Buffer {
-    return derivedKey.slice(32);
+    return derivedKey.subarray(32);
   }
 
   /**

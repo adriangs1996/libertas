@@ -15,12 +15,14 @@
     "type-check": "turbo run type-check",
     "clean": "turbo run clean && rm -rf node_modules",
     "format": "prettier --write \"packages/**/*.ts\"",
-    "format:check": "prettier --check \"packages/**/*.ts\""
+    "format:check": "prettier --check \"packages/**/*.ts\"",
+    "link:cli": "turbo run build && turbo run link --filter @libertas/cli"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
+    "esbuild": "^0.27.0",
     "prettier": "^3.1.0",
-    "turbo": "^1.10.0",
+    "turbo": "^2.6.0",
     "typescript": "^5.3.0"
   },
   "keywords": [
@@ -32,5 +34,8 @@
   ],
   "author": "",
   "license": "MIT",
-  "packageManager": "pnpm@10.24.0+sha512.01ff8ae71b4419903b65c60fb2dc9d34cf8bb6e06d03bde112ef38f7a34d6904c424ba66bea5cdcf12890230bf39f9580473140ed9c946fef328b6e5238a345a"
+  "packageManager": "pnpm@10.24.0+sha512.01ff8ae71b4419903b65c60fb2dc9d34cf8bb6e06d03bde112ef38f7a34d6904c424ba66bea5cdcf12890230bf39f9580473140ed9c946fef328b6e5238a345a",
+  "dependencies": {
+    "cross-keychain": "^1.1.0"
+  }
 }
