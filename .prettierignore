@@ -1,0 +1,58 @@
+# Dependencies
+node_modules/
+dist/
+build/
+.next/
+
+# Build outputs
+*.tsbuildinfo
+*.log
+logs/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Git
+.git/
+.gitignore
+
+# Turbo
+.turbo/
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Lock files (not formatted)
+pnpm-lock.yaml
+yarn.lock
+package-lock.json
+
+# Markdown files in node_modules and dist
+node_modules/**/*.md
+dist/**/*.md
+
+# Generated files
+**/*.generated.*
+**/*.min.*
+
+# Credentials and sensitive files
+credentials/
+.libertasrc
+.libertasrc.json
+.libertasrc.js
+
+# Temporary files
+tmp/
+temp/
+.test-*

@@ -1,0 +1,51 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "lib": [
+      "ES2020"
+    ],
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "baseUrl": ".",
+    "paths": {
+      "@libertas/core": [
+        "packages/core/src"
+      ],
+      "@libertas/express": [
+        "packages/integrations/express/src"
+      ],
+      "@libertas/nextjs": [
+        "packages/integrations/nextjs/src"
+      ],
+      "@libertas/nestjs": [
+        "packages/integrations/nestjs/src"
+      ],
+      "@libertas/fastify": [
+        "packages/integrations/fastify/src"
+      ],
+      "@libertas/hono": [
+        "packages/integrations/hono/src"
+      ]
+    }
+  },
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.spec.ts",
+    "**/*.test.ts"
+  ]
+}
