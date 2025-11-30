@@ -27,6 +27,9 @@ export {
   type CredentialSchema,
 } from './utils';
 
+// Environment file generator exports
+export { credentialsToEnv, envToCredentials } from './utils/env-generator';
+
 // Type exports
 export type {
   Credentials,
