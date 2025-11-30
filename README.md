@@ -1,11 +1,11 @@
 # Libertas 🛡️
 
-Secure credentials management system inspired by Rails credentials. A **100% TypeScript** monorepo with zero-dependency core library and comprehensive CLI tool for managing environment-specific credentials.
+**Minimal, focused credentials management** inspired by Rails credentials. A **100% TypeScript** monorepo with zero-dependency core library and simple CLI tool for encrypting and injecting credentials.
 
-Perfect for Docker deployments, Kubernetes, and local development with seamless integration across all platforms.
+Perfect for Docker deployments, local development, and CI/CD pipelines.
 
 ```
-🔐 Encrypt  |  💾 Store  |  🔓 Decrypt  |  🚀 Inject  |  📦 Export
+🔐 Encrypt  |  💾 Store  |  🔓 Decrypt  |  🚀 Inject
 ```
 
 ## ✨ Features
@@ -15,23 +15,20 @@ Perfect for Docker deployments, Kubernetes, and local development with seamless 
 - **PBKDF2** key derivation with 100,000 iterations
 - **Random IV** per encryption for maximum security
 - **Zero external dependencies** in core library (auditable & minimal attack surface)
-- **Cross-platform keychain** integration (macOS Keychain, Windows Credential Manager, Linux Secret Service)
-- **Secure file permissions** with automatic chmod 600
+- **Simple local key storage** at `~/.libertas/keys/` with 600 file permissions
 - **Secure deletion** with zero-overwriting before file removal
 
-### 🚀 Docker-Ready
+### 🚀 Container-Ready
 - **Runtime injection** - Load credentials at startup
-- **Build-time injection** - Bake credentials into images
-- **Auto environment detection** - NODE_ENV, RAILS_ENV, LIBERTAS_ENV support
-- **CI/CD friendly** - Works with GitHub Actions, GitLab CI, etc.
+- **Environment variable bootstrapping** - Credentials injected as env vars
+- **CI/CD friendly** - Works with GitHub Actions, GitLab CI, Docker, etc.
 
-### 🛠️ Developer-Friendly CLI
-- **13 powerful commands** for complete credential lifecycle
-- **Project-specific configuration** via `.libertasrc`
-- **Rails-style editor integration** for intuitive editing
-- **JSON schema validation** for credentials
-- **Credential masking** for safe logging/display
-- **Formatted output** with colors and tables
+### 🛠️ Simple CLI (5 Commands)
+- **`create`** - Create new credential set (with master key generation)
+- **`edit`** - Edit credentials with your favorite editor (vim, nano, nvim, vscode, etc.)
+- **`show-key`** - Display master key for a credential set
+- **`run`** - Execute command with credentials injected as environment variables
+- **`link`** - Link existing credentials with master keys (for cloned repos)
 
 ### 🔧 Core Library Features
 - **Pure TypeScript** with Node.js built-ins only
@@ -39,21 +36,6 @@ Perfect for Docker deployments, Kubernetes, and local development with seamless 
 - **Multiple storage backends** (File, Memory)
 - **Comprehensive error handling** with detailed messages
 - **TypeScript support** with full type definitions
-
-### 📦 CLI Commands (13 total)
-- `init` - Initialize project and set up credentials
-- `dump` - Export credentials to secure .env file
-- `verify-dump` - Verify .env integrity and permissions
-- `cleanup-dump` - Securely delete .env file
-- `run` - Execute commands with injected credentials
-- `get` - Retrieve specific credentials
-- `set` - Set individual credential values
-- `edit` - Edit complete credential sets
-- `delete` - Delete credentials
-- `list` - List all credential keys
-- `show` - Display credentials
-- `validate` - Validate credentials against schema
-- `open` (alias: `editor`) - Edit credentials in system editor
 
 ## Quick Start
 
@@ -67,97 +49,103 @@ npm install -g @libertas/cli
 npm install @libertas/core @libertas/cli
 ```
 
-### 1. Initialize Your Project
+### Starting Fresh
+
+#### 1. Create a Credential Set
 
 ```bash
-libertas init
+libertas create myapp
 ```
 
-This creates `.libertasrc` and stores your master key securely in your system keychain.
+You'll be prompted to choose:
+- Generate a new master key (recommended)
+- Use an existing master key
 
-### 2. Set Your Credentials
+The master key is stored locally at `~/.libertas/keys/myapp.key`
+
+#### 2. Edit Credentials
 
 ```bash
-# Set individual values
-libertas set myapp database.host localhost
-libertas set myapp database.port 5432
-libertas set myapp database.user admin
-libertas set myapp database.password secret
-
-# Or edit in your favorite editor (Rails-style)
-libertas open myapp
-
-# Or load from JSON file
-libertas edit myapp --file config.json
+# Edit in your favorite editor (vim, nano, nvim, vscode, etc.)
+libertas edit myapp
 ```
 
-### 3. Use Credentials in Your App
+A JSON file opens for editing:
+```json
+{
+  "database_host": "localhost",
+  "database_port": 5432,
+  "api_key": "sk-12345",
+  "api_secret": "secret-value"
+}
+```
 
-**Option A: Runtime Injection (Docker-friendly)**
+Save and close the editor. Credentials are encrypted automatically.
+
+#### 3. View the Master Key
+
+```bash
+libertas show-key myapp
+```
+
+Output:
+```
+🔐 Master Key for "myapp"
+a1b2c3d4e5f6...
+```
+
+#### 4. Run Commands with Credentials
+
 ```bash
 # Execute your app with injected credentials
-libertas run -- npm start
-
-# Or with specific environment
-libertas run production -- npm start
+libertas run myapp -- npm start
 
 # Works with any command
-libertas run -- python app.py
-libertas run -- ./my-binary
+libertas run myapp -- python app.py
+libertas run myapp -- ./my-binary --flag
 ```
 
-**Option B: Export to .env**
+Environment variables are automatically injected:
+- `DATABASE_HOST=localhost`
+- `DATABASE_PORT=5432`
+- `API_KEY=sk-12345`
+- `API_SECRET=secret-value`
+
+### Cloning an Existing Project
+
+If you clone a project that already has encrypted credentials (`.json` files in `./credentials/`):
+
 ```bash
-# Dump credentials to secure .env file
-libertas dump production > .env
+# 1. Install Libertas
+npm install -g @libertas/cli
 
-# Verify .env security
-libertas verify-dump
+# 2. Link existing credentials with master keys
+libertas link
 
-# Clean up when done
-libertas cleanup-dump
+# 3. The command will:
+#    - Detect all .json files in ./credentials/
+#    - Ask which ones you have master keys for
+#    - Let you skip any sets you don't have keys for
+#    - Save keys to ~/.libertas/keys/
+
+# 4. Run commands with credentials
+libertas run development -- npm start
+libertas run production -- npm start
 ```
 
-**Option C: Programmatically (TypeScript)**
+**Option: Programmatic Usage (TypeScript)**
 ```typescript
 import { CredentialsManager, FileStorage } from '@libertas/core';
 
 const storage = new FileStorage('./credentials');
 const manager = new CredentialsManager({
   masterKey: process.env.LIBERTAS_MASTER_KEY || 'your-key',
-  storageBackend: storage,
-  environment: 'production'
+  storageBackend: storage
 });
 
 // Load credentials
 const creds = await manager.load('myapp');
-console.log(creds.database.host);
-```
-
-### Common CLI Commands
-
-```bash
-# List all credential sets
-libertas list
-
-# Show credentials (with optional masking)
-libertas show myapp
-libertas show myapp --mask
-
-# Get specific credential
-libertas get myapp
-
-# Update a single value
-libertas set myapp api_key sk-12345
-
-# Validate credentials against schema
-libertas validate myapp --file schema.json
-
-# Delete credentials
-libertas delete staging --force
-
-# Edit in system editor
-libertas open myapp --editor vim
+console.log(creds.database_host);
 ```
 
 ## Packages
@@ -184,50 +172,57 @@ Core credentials management library with **zero external dependencies**.
 
 ### [@libertas/cli](./packages/cli)
 
-Command-line interface for complete credential lifecycle management.
+Minimal command-line interface for credential management.
 
 **Features:**
-- ✅ 13 full-featured commands
+- ✅ 5 focused commands
 - ✅ Commander.js for CLI parsing
-- ✅ System keychain integration (cross-platform)
-- ✅ Project-specific configuration (.libertasrc)
-- ✅ Environment-aware credential management
-- ✅ Secure file operations (chmod 600, .gitignore)
-- ✅ Docker runtime injection support
+- ✅ Local key storage at `~/.libertas/keys/`
+- ✅ Editor integration (vim, nano, nvim, vscode, etc.)
+- ✅ Environment variable injection
+- ✅ Master key management (generate, import, or link existing)
+- ✅ Auto-detection of existing credentials
 - ✅ 142 comprehensive unit tests
 
 **What's Included:**
-- `init` - Interactive setup wizard
-- `dump/verify-dump/cleanup-dump` - .env file management
-- `run` - Execute with injected credentials
-- `get/set/edit/delete/list/show` - Credential CRUD
-- `validate` - Schema validation
-- `open` - Editor integration
+- `create` - Create new credential set with master key
+- `edit` - Edit credentials in system editor
+- `show-key` - Display master key
+- `run` - Execute command with injected credentials
+- `link` - Link existing credentials to master keys (for cloned repos)
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────┐
-│      Framework Integrations         │
-│  Express | Next.js | NestJS | etc.  │
-└────────────────┬────────────────────┘
+┌─────────────────────────────────┐
+│    Your Application             │
+│  Node.js | Python | Go | etc.   │
+└────────────────┬────────────────┘
                  │
-         ┌───────┴────────┐
+         ┌───────▼────────┐
          │                │
-    ┌────▼────┐      ┌───▼─────┐
-    │   CLI   │      │  Core   │
-    │(Commands)      │(Features)
-    └────┬────┘      └────┬────┘
+    ┌────▼──────┐    ┌───▼──────┐
+    │   CLI     │    │  @core   │
+    │  (4 cmds) │    │Package   │
+    └────┬──────┘    └────┬─────┘
          │                │
-    ┌────▼────────────────▼────┐
-    │  @libertas/core Package   │
-    │   Zero Dependencies       │
-    ├──────────────────────────┤
-    │ • Encryption (AES-256)   │
-    │ • Storage (File/Memory)  │
-    │ • Crypto Utils           │
-    │ • Utilities              │
-    └──────────────────────────┘
+    ┌────▼────────────────▼────────┐
+    │  Credentials + Master Keys   │
+    │                              │
+    │  ~/.libertas/keys/     (local)
+    │  $LIBERTAS_MASTER_KEY  (env) │
+    │  ./credentials/        (repo)│
+    └──────────────────────────────┘
+         │
+    ┌────▼──────────────────┐
+    │ @libertas/core        │
+    │ Zero Dependencies     │
+    ├───────────────────────┤
+    │ • AES-256-GCM Encrypt │
+    │ • PBKDF2 Key Derive   │
+    │ • File Storage        │
+    │ • Crypto Utils        │
+    └───────────────────────┘
 ```
 
 ## Workspace Structure
@@ -248,9 +243,9 @@ libertas (monorepo root)
 
 ## Docker Integration
 
-Libertas is designed for Docker deployments with two patterns:
+Libertas is designed for Docker deployments with simple runtime injection:
 
-### Runtime Injection (Recommended)
+### Runtime Injection
 
 Store encrypted credentials in your repo, inject them at runtime:
 
@@ -266,57 +261,121 @@ COPY . .
 RUN npm install
 
 # Use libertas run to inject credentials
-CMD ["libertas", "run", "--", "npm", "start"]
+CMD ["libertas", "run", "myapp", "--", "npm", "start"]
 ```
 
+Run with the master key as an environment variable:
+
 ```bash
-# Run with credentials
 docker run -e LIBERTAS_MASTER_KEY=$MASTER_KEY myapp
 ```
 
-### Build-Time Injection
+Or store it in local key storage before running:
 
-Generate `.env` during build:
-
-```dockerfile
-FROM node:20-alpine
-WORKDIR /app
-
-RUN npm install -g @libertas/cli
-COPY . .
-
-# Generate .env file during build
-RUN LIBERTAS_MASTER_KEY=$MASTER_KEY libertas dump production > .env
-RUN npm install
-
-CMD ["npm", "start"]
+```bash
+libertas create myapp -k $MASTER_KEY
+docker run myapp
 ```
 
 **For complete Docker examples, see [DOCKER_INTEGRATION.md](./DOCKER_INTEGRATION.md)**
 
-## Configuration
+## Master Key Management
 
-### Configuration File (.libertasrc)
+Libertas provides two ways to manage master keys:
 
-Create in your project root:
+### Option 1: Environment Variable (Recommended for Docker/CI)
 
-```json
-{
-  "projectName": "my-app",
-  "environment": "development",
-  "storagePath": "./credentials"
-}
+```bash
+export LIBERTAS_MASTER_KEY=$(cat ~/.libertas/keys/myapp.key)
+libertas run myapp -- npm start
 ```
 
-### Environment Variables
+### Option 2: Local Storage (Default)
 
-- `LIBERTAS_ENV` - Override environment (production, staging, etc.)
-- `LIBERTAS_MASTER_KEY` - Master key for encryption/decryption
-- `NODE_ENV`, `RAILS_ENV` - Auto-detected for environment scoping
+Keys are stored at `~/.libertas/keys/{name}.key` with 600 permissions:
+
+```bash
+# Create set and generate key
+libertas create myapp
+
+# Key is automatically saved to ~/.libertas/keys/myapp.key
+# Retrieve key later
+libertas show-key myapp
+```
 
 ## Examples
 
-### 1. Programmatic Usage (TypeScript)
+### 1. Local Development
+
+```bash
+# Create a new credential set
+libertas create myapp
+
+# Edit credentials
+libertas edit myapp
+
+# Run your app with credentials injected
+libertas run myapp -- npm start
+
+# View the master key
+libertas show-key myapp
+```
+
+### 1b. Linking Existing Project Credentials
+
+When you clone a project, the `./credentials/` directory contains encrypted `.json` files:
+
+```
+./credentials/
+├── development.json  (encrypted with development master key)
+├── staging.json      (encrypted with staging master key)
+└── production.json   (encrypted with production master key)
+```
+
+Each file contains the encrypted credentials and a timestamp:
+```json
+{
+  "value": "encrypted_string_here",
+  "timestamp": "2024-11-30T19:34:59.000Z"
+}
+```
+
+Link them to your local key storage:
+
+```bash
+# Clone a project with existing encrypted credentials
+git clone https://github.com/user/myproject.git
+cd myproject
+
+# Install Libertas
+npm install -g @libertas/cli
+
+# Link existing credentials
+libertas link
+
+# Interactive prompt:
+# 🔗 Found 3 credential set(s)
+#
+# Do you have a master key for "development"? (yes/no) [no]: yes
+# Enter master key (64 hex characters): a1b2c3d4...
+# ✓ Master key for "development" saved
+#
+# Do you have a master key for "staging"? (yes/no) [no]: no
+# ⊘ Skipping "staging"
+#
+# Do you have a master key for "production"? (yes/no) [no]: yes
+# Enter master key (64 hex characters): f6e5d4c3...
+# ✓ Master key for "production" saved
+#
+# 📋 Summary
+# ✓ Linked: development, production
+# ⊘ Skipped: staging
+
+# Now you can use the credentials
+libertas run development -- npm start
+```
+
+### 2. Programmatic Usage (TypeScript)
 
 ```typescript
 import { CredentialsManager, FileStorage } from '@libertas/core';
@@ -325,8 +384,7 @@ import { CredentialsManager, FileStorage } from '@libertas/core';
 const storage = new FileStorage('./credentials');
 const manager = new CredentialsManager({
   masterKey: process.env.LIBERTAS_MASTER_KEY!,
-  storageBackend: storage,
-  environment: 'production'
+  storageBackend: storage
 });
 
 // Save credentials
@@ -334,8 +392,7 @@ await manager.save('database', {
   host: 'db.example.com',
   port: 5432,
   username: 'app_user',
-  password: 'super_secret',
-  database: 'app_db'
+  password: 'super_secret'
 });
 
 // Load credentials
@@ -343,92 +400,70 @@ const dbConfig = await manager.load('database');
 console.log(`Connecting to ${dbConfig.host}:${dbConfig.port}`);
 ```
 
-### 2. CLI: Setup and Configuration
+### 3. Docker Deployment
 
 ```bash
-# Initialize project (sets up .libertasrc and master key in keychain)
-libertas init
+# Step 1: Create credentials on your machine
+libertas create myapp
 
-# Set individual credentials
-libertas set myapp db.host localhost
-libertas set myapp db.port 5432
-libertas set myapp db.user admin
-libertas set myapp db.password secret123
+# Step 2: Commit encrypted credentials to git
+git add credentials/myapp.json
 
-# Load from JSON file
-libertas edit myapp --file credentials.json
+# Step 3: Get the master key
+MASTER_KEY=$(libertas show-key myapp)
 
-# List all credentials
-libertas list
-```
-
-### 3. CLI: Export to .env
-
-```bash
-# Dump credentials to secure .env file
-libertas dump production > .env
-
-# Verify .env file is secure (permissions 600, valid content)
-libertas verify-dump
-
-# Clean up .env file when done (secure overwrite + delete)
-libertas cleanup-dump
-```
-
-### 4. Docker: Runtime Injection
-
-```bash
-# Run application with injected credentials
-libertas run -- npm start
-
-# Run with specific environment
-libertas run production -- npm start
-
-# Run any command (works with Python, Go, etc.)
-libertas run -- python app.py
-libertas run staging -- ./my-binary --flag
-
-# In Docker
+# Step 4: Run Docker with master key
 docker run -e LIBERTAS_MASTER_KEY=$MASTER_KEY myapp
-# Container will execute: libertas run -- npm start
-# Credentials automatically injected as environment variables
 ```
 
-### 5. CLI: Validation
+### 4. CI/CD Pipeline (GitHub Actions)
 
-```bash
-# Create schema.json
-cat > schema.json << 'EOF'
-{
-  "host": { "required": true, "type": "string" },
-  "port": { "required": true, "type": "number" },
-  "username": { "required": true, "type": "string" },
-  "password": { "required": true, "type": "string" }
-}
-EOF
+```yaml
+name: Deploy
+on: [push]
 
-# Validate credentials
-libertas validate myapp --file schema.json
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
 
-# Show masked credentials (safe for logs)
-libertas show myapp --mask
+      - name: Install Libertas
+        run: npm install -g @libertas/cli
+
+      - name: Run app with credentials
+        env:
+          LIBERTAS_MASTER_KEY: ${{ secrets.LIBERTAS_MASTER_KEY }}
+        run: libertas run myapp -- npm start
 ```
 
-### 6. CLI: Edit in System Editor
+### 5. Using Different Credential Sets
 
 ```bash
-# Open in your default editor (Rails-style)
-libertas open myapp
+# Create different sets for different environments
+libertas create development
+libertas create staging
+libertas create production
 
-# Open in specific editor
-libertas open myapp --editor vim
-libertas open myapp --editor nano
+# Edit each with different values
+libertas edit development
+libertas edit staging
+libertas edit production
 
-# Create new if doesn't exist
-libertas open staging  # Creates if missing
+# Run with appropriate set
+libertas run development -- npm run dev
+libertas run production -- npm start
+```
 
-# Skip creation if doesn't exist
-libertas open staging --no-create
+### 6. Importing Existing Master Key
+
+```bash
+# Use an existing key when creating
+libertas create myapp -k $(cat /path/to/master.key)
+
+# Or use via environment variable
+export EXISTING_MASTER_KEY="a1b2c3d4..."
+libertas create myapp -k $EXISTING_MASTER_KEY
 ```
 
 ## Security Considerations
@@ -530,27 +565,25 @@ pnpm test:coverage # Generate coverage report
 ### Phase 1: Foundation ✅ (Complete)
 - ✅ Core library with AES-256-GCM encryption
 - ✅ Zero-dependency architecture
-- ✅ System keychain integration (macOS, Windows, Linux)
-- ✅ Project-specific credential management
-- ✅ 13 CLI commands with full features
-- ✅ Docker runtime & build-time injection
+- ✅ Local key storage at `~/.libertas/keys/`
+- ✅ Minimal 5-command CLI (create, edit, show-key, run, link)
+- ✅ Auto-detection of existing credentials
+- ✅ Docker runtime injection support
 - ✅ Comprehensive test suite (270+ tests)
 - ✅ Complete security policy documentation
 
 ### Phase 2: Enhancement 🔄 (In Progress)
 - 🔄 Framework integrations (Express, Next.js, NestJS)
-- 🔄 Interactive CLI prompts for setup
-- 🔄 Improved credential rotation workflows
-- 🔄 Audit logging capabilities
 - 🔄 Kubernetes integration examples
+- 🔄 Improved CLI error messages and help
+- 🔄 Environment variable flattening customization
 
 ### Phase 3: Advanced 📋 (Future)
-- 📋 Web UI for credential management
 - 📋 Remote credential storage (S3, GCS, Vault)
 - 📋 Multi-team support with access control
 - 📋 Automatic credential rotation
-- 📋 Version history and rollback
-- 📋 Slack/Teams integration
+- 📋 Credential sharing workflows
+- 📋 Audit logging capabilities
 
 ## Contributing
 
@@ -584,7 +617,6 @@ MIT - See [LICENSE](./LICENSE) file for details
 - **[Turbo](https://turbo.build/)** - Monorepo build orchestration
 - **[Commander.js](https://github.com/tj/commander.js)** - CLI argument parsing
 - **[Chalk](https://github.com/chalk/chalk)** - Terminal colors
-- **[cross-keychain](https://github.com/magarcia/cross-keychain)** - Cross-platform keychain access
 
 ## Inspired By
 
@@ -616,18 +648,32 @@ All tests must pass (`pnpm test`) and code must follow the TypeScript strict mod
 
 ## Get Started in 30 Seconds
 
+**Starting Fresh:**
 ```bash
 # Install globally
 npm install -g @libertas/cli
 
-# Initialize your project
-libertas init
+# Create a credential set
+libertas create myapp
 
-# Set a credential
-libertas set myapp database.host localhost
+# Edit credentials (opens your editor)
+libertas edit myapp
 
-# Use in your app
-libertas run -- npm start
+# Run your app with credentials injected
+libertas run myapp -- npm start
+```
+
+**Cloning an Existing Project:**
+```bash
+# Install Libertas
+npm install -g @libertas/cli
+
+# Link existing credentials
+libertas link
+
+# Follow the prompts to add your master keys
+# Run your app
+libertas run myapp -- npm start
 ```
 
 That's it! Your app now has encrypted credentials. 🎉
