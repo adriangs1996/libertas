@@ -144,10 +144,29 @@ export async function initCommand(isGlobal: boolean = false): Promise<void> {
     if (!isGlobal) {
       console.log(Formatter.info('\nSaving project configuration...'));
 
+      // Ask if user wants to configure storage paths per environment
+      const customStoragePath = await promptYesNo(
+        rl,
+        Formatter.info('Configure different storage paths per environment?')
+      );
+
+      // Build environment-specific configs
+      const environmentConfigs: Record<string, any> = {};
+      for (const env of environments) {
+        const envStoragePath = customStoragePath
+          ? await promptInput(rl, Formatter.info(`Storage path for ${env}`), storagePath)
+          : storagePath;
+
+        environmentConfigs[env] = {
+          storagePath: envStoragePath,
+        };
+      }
+
       const config: CLIConfig = {
         projectName,
-        environment: 'development',
-        storagePath,
+        defaultEnvironment: 'development', // Default environment (used if no env var set)
+        storagePath, // Root-level default
+        environments: environmentConfigs, // Environment-specific configs
       };
 
       try {
@@ -163,12 +182,29 @@ export async function initCommand(isGlobal: boolean = false): Promise<void> {
     // Success message
     console.log('\n' + Formatter.success('✓ Libertas setup complete!\n'));
     console.log(Formatter.info('Project: ' + projectName));
-    console.log(Formatter.info('Storage: ' + storagePath));
-    console.log(Formatter.info('Environments: ' + environments.join(', ')));
-    console.log(Formatter.info('\nYou can now use libertas commands:'));
+    console.log(Formatter.info('Default Environment: development'));
+    console.log(Formatter.info('Configured Environments: ' + environments.join(', ')));
+    console.log(Formatter.info('Storage Path: ' + storagePath));
+    console.log(Formatter.info('Master Keys: Saved to system keychain\n'));
+
+    console.log(Formatter.info('Usage Examples:'));
+    console.log(Formatter.info('  # Use development (default)'));
+    console.log(Formatter.info('  libertas set myapp db.host localhost'));
+    console.log(Formatter.info('  libertas run -- npm start\n'));
+
+    console.log(Formatter.info('  # Use production'));
+    console.log(Formatter.info('  LIBERTAS_ENV=production libertas set myapp db.host prod.db.com'));
+    console.log(Formatter.info('  LIBERTAS_ENV=production libertas run -- npm start\n'));
+
+    console.log(Formatter.info('  # Use staging'));
+    console.log(Formatter.info('  NODE_ENV=staging libertas dump > .env\n'));
+
+    console.log(Formatter.info('Common commands:'));
     console.log(Formatter.info('  libertas list              - List all credentials'));
-    console.log(Formatter.info('  libertas open database     - Edit database credentials'));
-    console.log(Formatter.info('  libertas show api-keys     - Display API keys'));
+    console.log(Formatter.info('  libertas show <key>        - Display credentials'));
+    console.log(Formatter.info('  libertas open <key>        - Edit in system editor'));
+    console.log(Formatter.info('  libertas dump [env]        - Export to .env file'));
+    console.log(Formatter.info('  libertas run -- <cmd>      - Execute with credentials'));
     console.log(Formatter.info('  libertas --help            - Show all commands\n'));
 
     rl.close();

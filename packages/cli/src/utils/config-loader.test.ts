@@ -27,7 +27,7 @@ describe('Config Loader', () => {
     });
 
     it('should load config from .libertasrc file', async () => {
-      const testConfig = { environment: 'production', storagePath: './creds' };
+      const testConfig = { defaultEnvironment: 'production', storagePath: './creds' };
       const configPath = path.join(testDir, '.libertasrc');
       await fs.writeFile(configPath, JSON.stringify(testConfig));
 
@@ -44,7 +44,7 @@ describe('Config Loader', () => {
     });
 
     it('should load config from .libertasrc.json file', async () => {
-      const testConfig = { environment: 'staging' };
+      const testConfig = { defaultEnvironment: 'staging' };
       const configPath = path.join(testDir, '.libertasrc.json');
       await fs.writeFile(configPath, JSON.stringify(testConfig));
 
@@ -60,7 +60,7 @@ describe('Config Loader', () => {
     });
 
     it('should prefer environment variables over file config', async () => {
-      const testConfig = { environment: 'from-file' };
+      const testConfig = { defaultEnvironment: 'from-file' };
       const configPath = path.join(testDir, '.libertasrc');
       await fs.writeFile(configPath, JSON.stringify(testConfig));
 
@@ -78,20 +78,20 @@ describe('Config Loader', () => {
 
   describe('saveConfig', () => {
     it('should save config to .libertasrc file', async () => {
-      const config = { environment: 'test', storagePath: './test-storage' };
+      const config = { defaultEnvironment: 'test', storagePath: './test-storage' };
       await saveConfig(config, testDir);
 
       const configPath = path.join(testDir, '.libertasrc');
       const content = await fs.readFile(configPath, 'utf-8');
       const saved = JSON.parse(content);
 
-      expect(saved.environment).toBe('test');
+      expect(saved.defaultEnvironment).toBe('test');
       expect(saved.storagePath).toBe('./test-storage');
     });
 
     it('should overwrite existing config', async () => {
-      const config1 = { environment: 'dev' };
-      const config2 = { environment: 'prod', storagePath: './prod-storage' };
+      const config1 = { defaultEnvironment: 'dev' };
+      const config2 = { defaultEnvironment: 'prod', storagePath: './prod-storage' };
 
       await saveConfig(config1, testDir);
       await saveConfig(config2, testDir);
@@ -100,7 +100,7 @@ describe('Config Loader', () => {
       const content = await fs.readFile(configPath, 'utf-8');
       const saved = JSON.parse(content);
 
-      expect(saved.environment).toBe('prod');
+      expect(saved.defaultEnvironment).toBe('prod');
       expect(saved.storagePath).toBe('./prod-storage');
     });
   });
