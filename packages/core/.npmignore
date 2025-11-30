@@ -1,0 +1,6 @@
+src
+*.test.ts
+tsconfig.json
+vitest.config.ts
+.prettierrc
+.eslintrc.cjs

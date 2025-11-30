@@ -18,14 +18,29 @@ build/
 *~
 .DS_Store
 
-# Environment
+# Environment & Secrets
 .env
 .env.local
 .env.*.local
+.env.*.public
+.envrc
+
+# Credentials (sensitive files)
+credentials/*.enc
+!credentials/.gitkeep
+credentials/.backup
+*.pem
+*.key
+id_rsa*
+
+# CI/CD Secrets
+.github/workflows/*.env
+secrets.json
 
 # Test coverage
 coverage/
 .nyc_output/
+*.coverage
 
 # Logs
 logs/
@@ -33,6 +48,7 @@ logs/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 
 # OS
 .DS_Store
@@ -40,4 +56,37 @@ Thumbs.db
 
 # Turbo
 .turbo/
-examples
+.next/
+
+# IDE specific
+.vscode/settings.json
+.idea/workspace.xml
+*.iml
+.env.local
+
+# Example files (may contain sensitive data)
+examples/
+!examples/README.md
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# System files
+.cache
+.npm
+.pnpm-debug.log
+
+# Build artifacts
+dist/
+build/
+*.tsbuildinfo
+out/
+
+# Package manager lock files (use pnpm-lock.yaml)
+package-lock.json
+yarn.lock
+bun.lockb

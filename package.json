@@ -1,6 +1,6 @@
 {
   "name": "libertas",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Secure credentials management system inspired by Rails credentials - a monorepo of npm packages",
   "private": true,
   "workspaces": [

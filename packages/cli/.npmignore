@@ -1,0 +1,8 @@
+src
+*.test.ts
+tsconfig.json
+vitest.config.ts
+.prettierrc
+.eslintrc.cjs
+build.mjs
+esbuild.config.mjs
